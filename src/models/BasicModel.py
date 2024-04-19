@@ -201,6 +201,19 @@ class BasicModel(object):
 
         print("=> loading checkpoint '{}'".format(resume_path))
         current_checkpoint = torch.load(resume_path)
+
+        # patch parameter name with intermediate module.
+        new_stat = {}
+        for key, val in current_checkpoint['state_dict'].items():
+            if "module" not in key:
+                new_key = key.split(".")
+                new_key.insert(1, "module")
+                new_key = ".".join(new_key)
+                new_stat[new_key] = val
+            else:
+                new_stat[key] = val
+        current_checkpoint['state_dict'] = new_stat
+
         if isinstance(current_checkpoint['state_dict'], torch.nn.DataParallel):
             current_checkpoint['state_dict'] = current_checkpoint['state_dict'].module
 
